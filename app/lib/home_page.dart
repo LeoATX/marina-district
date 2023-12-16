@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-improt 'package:'
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -51,12 +51,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  // int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  // void _incrementCounter() {
+  //   setState(() {
+  //     _counter++;
+  //   });
+  // }
+
+  late GoogleMapController mapController;
+
+  final LatLng _center = const LatLng(-33.86, 151.20);
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   @override
@@ -68,20 +76,25 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(items: const [BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.search_circle_fill),
-            label: 'Explore',
-          ),]),
+      tabBar: CupertinoTabBar(items: const [
+        BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.search_circle_fill),
+          label: 'Explore',
+        ),
+      ]),
       tabBuilder: (BuildContext context, int index) {
-        return CupertinoTabView(
-          builder: (BuildContext context) {
-            // AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4
-            return 
-          },
+        return CupertinoPageScaffold(
+          child: GoogleMap(
+            onMapCreated: _onMapCreated,
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: 11.0,
+            ),
+          ),
         );
       },
     );
