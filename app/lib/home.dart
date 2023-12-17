@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:app/map.dart';
+import 'package:app/load.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -35,6 +36,13 @@ class _HomePageState extends State<HomePage> {
     )
   ];
 
+  final Future<String> _calculation = Future<String>.delayed(
+    const Duration(seconds: 2),
+    () {
+      return 'Data Loaded';
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -43,15 +51,31 @@ class _HomePageState extends State<HomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(items: const [
-        BottomNavigationBarItem(icon: Icon(CupertinoIcons.map)),
-        BottomNavigationBarItem(icon: Icon(CupertinoIcons.bookmark)),
-      ]),
-      tabBuilder: (BuildContext context, int index) {
-        // uses index from tabBuilder to navigate pages
-        return pages[index];
-      },
-    );
+    return FutureBuilder<String>(
+        future: _calculation,
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+          if (snapshot.data != null) {
+            return CupertinoTabScaffold(
+              tabBar: CupertinoTabBar(
+                items: const [
+                  BottomNavigationBarItem(
+                      icon: Icon(CupertinoIcons.map),
+                      activeIcon: Icon(CupertinoIcons.map_fill)),
+                  BottomNavigationBarItem(
+                    icon: Icon(CupertinoIcons.bookmark), 
+                    activeIcon: Icon(CupertinoIcons.bookmark_fill)),
+                ],
+                backgroundColor: CupertinoColors.white,
+                activeColor: CupertinoTheme.of(context).primaryColor,
+              ),
+              tabBuilder: (BuildContext context, int index) {
+                // uses index from tabBuilder to navigate pages
+                return pages[index];
+              },
+            );
+          } else {
+            return const LoadPage();
+          }
+        });
   }
 }
