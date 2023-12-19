@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:app/map.dart';
 import 'package:app/load.dart';
+import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -21,40 +22,72 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var pages = [
-    CupertinoTabView(
-      builder: (BuildContext context) {
-        return const MapPage();
-      },
-    ),
-    CupertinoTabView(
-      builder: (BuildContext context) {
-        return const Center(
-          child: Text('Hello World'),
-        );
-      },
-    )
-  ];
+  late List pages;
+  late LocationData locationData;
 
-  final Future<String> _calculation = Future<String>.delayed(
-    const Duration(seconds: 2),
-    () {
-      return 'Data Loaded';
-    },
-  );
+  // final Future<String> _calculation = Future<String>.delayed(
+  //   const Duration(seconds: 2),
+  //   () {
+  //     return 'Data Loaded';
+  //   },
+  // );
+
+  Future<String> minimumDelay() async {
+    // minimum delay
+    await Future.delayed(const Duration(seconds: 2));
+    return 'delay complete';
+  }
+
+  Future<dynamic> initialLocation() async {
+    Location location = Location();
+
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    serviceEnabled = await location.serviceEnabled();
+    while (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+    }
+
+    permissionGranted = await location.hasPermission();
+    while (permissionGranted != PermissionStatus.granted) {
+      permissionGranted = await location.requestPermission();
+    }
+    return await location.getLocation();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
+    // This method is rerun every time setState is called
     //
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return FutureBuilder<String>(
-        future: _calculation,
-        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-          if (snapshot.data != null) {
+
+    pages = [
+      CupertinoTabView(
+        builder: (BuildContext context) {
+          return MapPage(initialLocationData: locationData);
+        },
+      ),
+      CupertinoTabView(
+        builder: (BuildContext context) {
+          return const Center(
+            child: Text('Hello World',
+                style: TextStyle(
+                    color: CupertinoDynamicColor.withBrightness(
+                        color: CupertinoColors.black,
+                        darkColor: CupertinoColors.white))),
+          );
+        },
+      )
+    ];
+
+    return FutureBuilder<List<dynamic>>(
+        // future: Future.wait([bar, foo]),
+        future: Future.wait([minimumDelay(), initialLocation()]),
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+          if (snapshot.hasData) {
             return CupertinoTabScaffold(
               tabBar: CupertinoTabBar(
                 items: const [
@@ -62,14 +95,14 @@ class _HomePageState extends State<HomePage> {
                       icon: Icon(CupertinoIcons.map),
                       activeIcon: Icon(CupertinoIcons.map_fill)),
                   BottomNavigationBarItem(
-                    icon: Icon(CupertinoIcons.bookmark), 
-                    activeIcon: Icon(CupertinoIcons.bookmark_fill)),
+                      icon: Icon(CupertinoIcons.bookmark),
+                      activeIcon: Icon(CupertinoIcons.bookmark_fill)),
                 ],
-                backgroundColor: CupertinoColors.white,
                 activeColor: CupertinoTheme.of(context).primaryColor,
               ),
               tabBuilder: (BuildContext context, int index) {
                 // uses index from tabBuilder to navigate pages
+                locationData = snapshot.data![1];
                 return pages[index];
               },
             );

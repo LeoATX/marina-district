@@ -14,7 +14,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   Brightness? brightness;
-  Color? scaffoldBackgroundColor;
+  Color? backgroundColor;
 
   // This widget is the root of your application.
   @override
@@ -22,19 +22,19 @@ class _AppState extends State<App> {
     // control theme based on light or dark mode
     brightness = MediaQuery.of(context).platformBrightness;
     if (brightness == Brightness.dark) {
-      scaffoldBackgroundColor = CupertinoColors.systemBackground;
+      backgroundColor = CupertinoColors.systemBackground;
+    } else {
+      backgroundColor = CupertinoColors.systemBackground;
     }
-    else {
-      scaffoldBackgroundColor = CupertinoColors.systemBackground;
-    }
-    
+
     return CupertinoApp(
       title: 'MD',
       theme: CupertinoThemeData(
           primaryColor: const Color.fromARGB(224, 90, 169, 225),
           textTheme: const CupertinoTextThemeData(
               textStyle: TextStyle(fontFamily: 'JetBrains Mono')),
-          scaffoldBackgroundColor: scaffoldBackgroundColor),
+          barBackgroundColor: backgroundColor,
+          scaffoldBackgroundColor: backgroundColor),
       home: const HomePage(title: 'home'),
     );
   }
