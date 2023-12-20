@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
+late LocationData locationData;
+
 class MapPage extends StatefulWidget {
   const MapPage({super.key, required this.initialLocationData});
   final LocationData initialLocationData;
@@ -11,24 +13,35 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  // google maps stuff
+// google maps stuff
   late GoogleMapController mapController;
-  late LocationData locationData;
-  // final center = const LatLng(37.803, -122.436);
+  // late LocationData locationData;
+  bool cameraTrack = true;
+  // marina district: LatLng(37.803, -122.436);
 
   // live location
   Location location = Location();
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
-  }
+  @override
+  void initState() {
+    super.initState();
 
-  void currentLocation() async {
+    // live location monitoring
     location.onLocationChanged.listen((LocationData currentLocation) {
       // Use current location
-      locationData = locationData;
+      locationData = currentLocation;
+
+      // if (cameraTrack) {
+      //   mapController.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
+      //       target: LatLng(locationData.latitude!, locationData.longitude!))));
+      // }
+
       Future.delayed(const Duration(seconds: 15), districtMapCall);
     });
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
   }
 
   LatLng districtMapCall() {

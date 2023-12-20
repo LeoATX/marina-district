@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:app/map.dart';
 import 'package:app/load.dart';
 import 'package:location/location.dart';
+import 'package:app/menu.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -70,17 +71,9 @@ class _HomePageState extends State<HomePage> {
           return MapPage(initialLocationData: locationData);
         },
       ),
-      CupertinoTabView(
-        builder: (BuildContext context) {
-          return const Center(
-            child: Text('Hello World',
-                style: TextStyle(
-                    color: CupertinoDynamicColor.withBrightness(
-                        color: CupertinoColors.black,
-                        darkColor: CupertinoColors.white))),
-          );
-        },
-      )
+      CupertinoTabView(builder: (BuildContext context) {
+        return const MenuPage();
+      }),
     ];
 
     return FutureBuilder<List<dynamic>>(
