@@ -15,12 +15,7 @@ class _MenuPageState extends State<StatefulWidget> {
       builder: (BuildContext context) {
         return Center(
           child: Text(
-              '${locationData.altitude}, ${locationData.longitude.toString()}',
-              // style: const TextStyle(
-              //     color: CupertinoDynamicColor.withBrightness(
-              //         color: CupertinoColors.black,
-              //         darkColor: CupertinoColors.white))
-                      ),
+              '${locationData.altitude}, ${locationData.longitude.toString()}'),
         );
       },
     );

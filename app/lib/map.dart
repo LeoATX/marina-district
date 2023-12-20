@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'dart:async';
 
 late LocationData locationData;
 
@@ -14,9 +15,10 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
 // google maps stuff
-  late GoogleMapController mapController;
+  final Completer<GoogleMapController> mapController =
+      Completer<GoogleMapController>();
   // late LocationData locationData;
-  bool cameraTrack = true;
+  bool cameraTrack = false;
   // marina district: LatLng(37.803, -122.436);
 
   // live location
@@ -27,21 +29,26 @@ class _MapPageState extends State<MapPage> {
     super.initState();
 
     // live location monitoring
-    location.onLocationChanged.listen((LocationData currentLocation) {
+    location.onLocationChanged.listen((LocationData currentLocation) async {
       // Use current location
       locationData = currentLocation;
+      final GoogleMapController liveController = await mapController.future;
 
-      // if (cameraTrack) {
-      //   mapController.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
-      //       target: LatLng(locationData.latitude!, locationData.longitude!))));
-      // }
+      if (cameraTrack) {
+        liveController.moveCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            bearing: 0.0,
+            target: LatLng(locationData.latitude!, locationData.longitude!), 
+            zoom: 16.16
+            )));
+      }
 
       Future.delayed(const Duration(seconds: 15), districtMapCall);
     });
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+    mapController.complete(controller);
   }
 
   LatLng districtMapCall() {
@@ -55,7 +62,7 @@ class _MapPageState extends State<MapPage> {
           initialCameraPosition: CameraPosition(
             target: LatLng(widget.initialLocationData.latitude!,
                 widget.initialLocationData.longitude!),
-            zoom: 14,
+            zoom: 16.16,
           ),
           onMapCreated: _onMapCreated,
           compassEnabled: false,
