@@ -2,6 +2,8 @@
     <!--location tracking permissions-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!--internet access permissions-->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="app"
         android:name="${applicationName}"

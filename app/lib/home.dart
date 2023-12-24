@@ -83,16 +83,17 @@ class _HomePageState extends State<HomePage> {
           if (snapshot.hasData) {
             return CupertinoTabScaffold(
               tabBar: CupertinoTabBar(
-                items: const [
-                  BottomNavigationBarItem(
-                      icon: Icon(CupertinoIcons.map),
-                      activeIcon: Icon(CupertinoIcons.map_fill)),
-                  BottomNavigationBarItem(
-                      icon: Icon(CupertinoIcons.bookmark),
-                      activeIcon: Icon(CupertinoIcons.bookmark_fill)),
-                ],
-                activeColor: CupertinoTheme.of(context).primaryColor,
-              ),
+                  items: const [
+                    BottomNavigationBarItem(
+                        icon: Icon(CupertinoIcons.map),
+                        activeIcon: Icon(CupertinoIcons.map_fill)),
+                    BottomNavigationBarItem(
+                        icon: Icon(CupertinoIcons.bookmark),
+                        activeIcon: Icon(CupertinoIcons.bookmark_fill)),
+                  ],
+                  activeColor: CupertinoTheme.of(context).primaryColor,
+                  border: const Border() // remove hairline border
+                  ),
               tabBuilder: (BuildContext context, int index) {
                 // uses index from tabBuilder to navigate pages
                 locationData = snapshot.data![1];

@@ -11,7 +11,7 @@ class LoadPage extends StatelessWidget {
                 style: TextStyle(
                     // fontFamily: 'JetBrains Mono',
                     fontSize: 48,
-                    fontWeight: FontWeight.bold, 
+                    fontWeight: FontWeight.bold,
                     color: CupertinoTheme.of(context).primaryColor))));
   }
 }

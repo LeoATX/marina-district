@@ -14,11 +14,13 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-// google maps stuff
-  final Completer<GoogleMapController> mapController =
+  // future map controller handling
+  final Completer<GoogleMapController> controller =
       Completer<GoogleMapController>();
-  // late LocationData locationData;
-  bool cameraTrack = false;
+  // actual map controller after await
+  late GoogleMapController mapController;
+  bool cameraTrack = false; // settable with buttons
+
   // marina district: LatLng(37.803, -122.436);
 
   // live location
@@ -32,27 +34,22 @@ class _MapPageState extends State<MapPage> {
     location.onLocationChanged.listen((LocationData currentLocation) async {
       // Use current location
       locationData = currentLocation;
-      final GoogleMapController liveController = await mapController.future;
+      // run once on map created
+      mapController = await controller.future;
 
       if (cameraTrack) {
-        liveController.moveCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            bearing: 0.0,
-            target: LatLng(locationData.latitude!, locationData.longitude!), 
-            zoom: 16.16
-            )));
+        mapController.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+                bearing: 0.0,
+                target: LatLng(locationData.latitude!, locationData.longitude!),
+                zoom: 16.16)));
       }
-
-      Future.delayed(const Duration(seconds: 15), districtMapCall);
+      
     });
   }
 
   void _onMapCreated(GoogleMapController controller) {
-    mapController.complete(controller);
-  }
-
-  LatLng districtMapCall() {
-    return const LatLng(37.803, -122.436);
+    this.controller.complete(controller);
   }
 
   @override
