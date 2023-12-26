@@ -19,7 +19,7 @@ class _MenuPageState extends State<MenuPage> {
     response = 'hello';
 
     Timer.periodic(const Duration(seconds: 2), (timer) async {
-      response = (await get(Uri.parse('https://httpbin.org/'))).body;
+      // response = (await get(Uri.parse('https://httpbin.org/'))).body;
       // ignore: avoid_print
       print(response);
       setState(() {
