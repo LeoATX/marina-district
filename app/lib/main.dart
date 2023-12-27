@@ -24,19 +24,19 @@ class _AppState extends State<App> {
     brightness = MediaQuery.of(context).platformBrightness;
     // dark mode
     if (brightness == Brightness.dark) {
-      backgroundColor = CupertinoColors.systemBackground;
+      backgroundColor = const Color(0xFF1F2A39);
       textColor = CupertinoColors.white;
     }
     // light mode
     else {
       backgroundColor = CupertinoColors.systemBackground;
-      textColor = CupertinoColors.systemGrey;
+      textColor = CupertinoColors.label;
     }
 
     return CupertinoApp(
       title: 'MD',
       theme: CupertinoThemeData(
-          primaryColor: const Color.fromARGB(224, 90, 169, 225),
+          primaryColor: const Color.fromARGB(255, 90, 169, 225),
           textTheme: CupertinoTextThemeData(
               textStyle:
                   TextStyle(color: textColor, fontFamily: 'JetBrains Mono')),

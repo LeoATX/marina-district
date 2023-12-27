@@ -1,22 +1,42 @@
-// void main() async {
-// var request = Request(
-//     'GET',
-//     Uri.parse(
-//         'https://maps.googleapis.com/maps/api/geocode/json?latlng=37.803, -122.436&key=AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'));
-//
-// StreamedResponse response = await request.send();
-//
-//
-//
-// if (response.statusCode == 200) {
-//   print(await response.stream.bytesToString());
-// } else {
-//   print(response.reasonPhrase);
-const uri = 'maps.googleapis.com';
-const params = {
-  'latlng': '37.803, -122.436',
-  'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
-};
+// const uri = 'maps.googleapis.com';
+// const params = {
+//   'latlng': '37.803, -122.436',
+//   'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
+// };
+import 'dart:convert';
+
+String getDistrictName(dynamic response) {
+  String distName = "not found";
+  // dynamic response =
+  //     (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
+  response = jsonDecode(response);
+  ReverseGeocoding reverseGeocoding = ReverseGeocoding.fromJson(response);
+
+  // loop through to try and get neighborhood
+  resultLoop:
+  for (var result in reverseGeocoding.results) {
+    for (var component in result.addressComponent) {
+      if (component.types.contains('neighborhood')) {
+        distName = component.longName;
+        break resultLoop;
+      }
+      if (component.types.contains('locality')) {
+        distName = component.longName;
+        break resultLoop;
+      }
+      if (component.types.contains('administrative_area_level_2')) {
+        distName = component.longName;
+        break resultLoop;
+      }
+      if (component.types.contains('administrative_area_level_1')) {
+        distName = component.longName;
+        break resultLoop;
+      }
+    }
+  }
+
+  return distName;
+}
 
 class ReverseGeocoding {
   final List<Place> results;

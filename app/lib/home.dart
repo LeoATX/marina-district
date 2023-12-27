@@ -1,8 +1,10 @@
-import 'package:flutter/cupertino.dart';
-import 'package:app/map.dart';
 import 'package:app/load.dart';
-import 'package:location/location.dart';
+import 'package:app/map.dart';
 import 'package:app/menu.dart';
+import 'package:app/reverse_geocoding.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart';
+import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -25,13 +27,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late List pages;
   late LocationData locationData;
-
-  // final Future<String> _calculation = Future<String>.delayed(
-  //   const Duration(seconds: 2),
-  //   () {
-  //     return 'Data Loaded';
-  //   },
-  // );
+  late String distName;
 
   Future<String> minimumDelay() async {
     // minimum delay
@@ -39,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     return 'delay complete';
   }
 
-  Future<dynamic> initialLocation() async {
+  Future<LocationData> initialLocation() async {
     Location location = Location();
 
     bool serviceEnabled;
@@ -54,7 +50,23 @@ class _HomePageState extends State<HomePage> {
     while (permissionGranted != PermissionStatus.granted) {
       permissionGranted = await location.requestPermission();
     }
+    locationData = await location.getLocation();
     return await location.getLocation();
+  }
+
+  Future<String> initialDistName() async {
+    locationData = await initialLocation();
+    const uri = 'maps.googleapis.com';
+    final Map<String, String> params = {
+      'latlng': '${locationData.latitude}, ${locationData.longitude}',
+      'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
+    };
+
+    // make geocoding api call
+    dynamic response =
+        (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
+    distName = getDistrictName(response);
+    return distName;
   }
 
   @override
@@ -68,7 +80,8 @@ class _HomePageState extends State<HomePage> {
     pages = [
       CupertinoTabView(
         builder: (BuildContext context) {
-          return MapPage(initialLocationData: locationData);
+          return MapPage(
+              initialLocationData: locationData, initialDistName: distName);
         },
       ),
       CupertinoTabView(builder: (BuildContext context) {
@@ -78,7 +91,7 @@ class _HomePageState extends State<HomePage> {
 
     return FutureBuilder<List<dynamic>>(
         // future: Future.wait([bar, foo]),
-        future: Future.wait([minimumDelay(), initialLocation()]),
+        future: Future.wait([minimumDelay(), initialDistName()]),
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.hasData) {
             return CupertinoTabScaffold(
@@ -96,7 +109,6 @@ class _HomePageState extends State<HomePage> {
                   ),
               tabBuilder: (BuildContext context, int index) {
                 // uses index from tabBuilder to navigate pages
-                locationData = snapshot.data![1];
                 return pages[index];
               },
             );
