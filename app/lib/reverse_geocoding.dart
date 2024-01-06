@@ -4,6 +4,8 @@
 //   'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
 // };
 import 'dart:convert';
+import 'package:http/http.dart';
+import 'package:location/location.dart';
 
 String getDistrictName(dynamic response) {
   String distName = "not found";
@@ -36,6 +38,48 @@ String getDistrictName(dynamic response) {
   }
 
   return distName;
+}
+
+String getDistAddress(dynamic response) {
+  String distAddress = "";
+  response = jsonDecode(response);
+  ReverseGeocoding reverseGeocoding = ReverseGeocoding.fromJson(response);
+
+  resultLoop:
+  for (var result in reverseGeocoding.results) {
+    for (var index = 0; index < result.addressComponent.length; index += 1) {
+      // break here if possible
+      if (result.addressComponent[index].types.contains('neighborhood')) {
+        distAddress = "$distAddress${result.addressComponent[index].longName}";
+      }
+      if (result.addressComponent[index].types.contains('locality')) {
+        distAddress =
+            "$distAddress, ${result.addressComponent[index].longName}";
+      }
+      if (result.addressComponent[index].types
+          .contains('administrative_area_level_1')) {
+        distAddress =
+            "$distAddress, ${result.addressComponent[index].longName}";
+      }
+      if (distAddress != "") {
+        return distAddress;
+      }
+    }
+  }
+
+  return distAddress;
+}
+
+Future<String> getGeocodeResponse(LocationData locationData) async {
+  const uri = 'maps.googleapis.com';
+  Map<String, String> params = {
+    'latlng': '${locationData.latitude}, ${locationData.longitude}',
+    'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
+  };
+  // make geocoding api call
+  String geocodeResponse =
+      (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
+  return geocodeResponse;
 }
 
 class ReverseGeocoding {

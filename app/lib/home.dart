@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+import 'main.dart';
 import 'package:app/load.dart';
 import 'package:app/map.dart';
 import 'package:app/menu.dart';
@@ -28,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   late List pages;
   late LocationData locationData;
   late String distName;
+  late String geocodeResponse;
 
   Future<String> minimumDelay() async {
     // minimum delay
@@ -35,7 +39,7 @@ class _HomePageState extends State<HomePage> {
     return 'delay complete';
   }
 
-  Future<LocationData> initialLocation() async {
+  Future<void> initLocation() async {
     Location location = Location();
 
     bool serviceEnabled;
@@ -50,23 +54,48 @@ class _HomePageState extends State<HomePage> {
     while (permissionGranted != PermissionStatus.granted) {
       permissionGranted = await location.requestPermission();
     }
+    // locationData = await location.getLocation();
     locationData = await location.getLocation();
-    return await location.getLocation();
+
+    // init distName & geocodeResponse
+    geocodeResponse = await getGeocodeResponse(locationData);
+    distName = getDistrictName(geocodeResponse);
   }
 
-  Future<String> initialDistName() async {
-    locationData = await initialLocation();
-    const uri = 'maps.googleapis.com';
-    final Map<String, String> params = {
-      'latlng': '${locationData.latitude}, ${locationData.longitude}',
-      'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
-    };
+  // Future<String> initDistName() async {
+  //   locationData = await initLocation();
+  //   const uri = 'maps.googleapis.com';
+  //   final Map<String, String> params = {
+  //     'latlng': '${locationData.latitude}, ${locationData.longitude}',
+  //     'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
+  //   };
+  //
+  //   // make geocoding api call
+  //   dynamic response =
+  //       (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
+  //   distName = getDistrictName(response);
+  //   return distName;
+  // }
 
-    // make geocoding api call
-    dynamic response =
-        (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
-    distName = getDistrictName(response);
-    return distName;
+  Future<String> getSpotifyToken() async {
+    const clientId = '783911c86b494ab282bd1623ca55998b';
+    const clientSecret = 'ec709b7a62a04f10aa873ce1d49a7a86';
+    final response = (await post(
+        Uri.parse('https://accounts.spotify.com/api/token'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body:
+            'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'));
+
+    final accessToken = jsonDecode(response.body)['access_token'];
+    return accessToken;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Timer.periodic(const Duration(seconds: 3000), (timer) async {
+      spotifyToken = await getSpotifyToken();
+    });
   }
 
   @override
@@ -81,7 +110,9 @@ class _HomePageState extends State<HomePage> {
       CupertinoTabView(
         builder: (BuildContext context) {
           return MapPage(
-              initialLocationData: locationData, initialDistName: distName);
+              initialLocationData: locationData,
+              initialDistName: distName,
+              initialGeocodeResponse: geocodeResponse);
         },
       ),
       CupertinoTabView(builder: (BuildContext context) {
@@ -91,9 +122,12 @@ class _HomePageState extends State<HomePage> {
 
     return FutureBuilder<List<dynamic>>(
         // future: Future.wait([bar, foo]),
-        future: Future.wait([minimumDelay(), initialDistName()]),
+        future:
+            Future.wait([minimumDelay(), initLocation(), getSpotifyToken()]),
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.hasData) {
+            spotifyToken = snapshot.data![2];
+            print(spotifyToken);
             return CupertinoTabScaffold(
               tabBar: CupertinoTabBar(
                   items: const [

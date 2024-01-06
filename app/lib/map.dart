@@ -1,21 +1,22 @@
 import 'dart:async';
+import 'main.dart';
 import 'package:app/reverse_geocoding.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart';
 import 'package:location/location.dart';
-
-// global real time location data
-late LocationData locationData;
+import 'fetch_song.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage(
       {super.key,
       required this.initialLocationData,
-      required this.initialDistName});
+      required this.initialDistName,
+      required this.initialGeocodeResponse});
 
   final LocationData initialLocationData;
   final String initialDistName;
+  final String initialGeocodeResponse;
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -29,6 +30,9 @@ class _MapPageState extends State<MapPage> {
   // actual map controller after await
   late GoogleMapController mapController;
   bool cameraTrack = true; // settable with button
+
+  // song recommendation page pop up
+  bool getSongPressed = false;
 
   // marina district: LatLng(37.803, -122.436);
 
@@ -66,17 +70,12 @@ class _MapPageState extends State<MapPage> {
     // district name
     locationData = widget.initialLocationData;
     distName = widget.initialDistName;
-    const uri = 'maps.googleapis.com';
+    geocodeResponse = widget.initialGeocodeResponse;
 
     // TODO: change for prod
     Timer.periodic(const Duration(seconds: 9999999), (timer) async {
-      Map<String, String> params = {
-        'latlng': '${locationData.latitude}, ${locationData.longitude}',
-        'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
-      };
       // make geocoding api call
-      geocodeResponse =
-          (await get(Uri.https(uri, 'maps/api/geocode/json', params))).body;
+      geocodeResponse = getGeocodeResponse(locationData);
       print('making api calls');
       distName = getDistrictName(geocodeResponse);
 
@@ -147,7 +146,11 @@ class _MapPageState extends State<MapPage> {
                   padding: const EdgeInsets.only(
                       left: 20, top: 10, right: 20, bottom: 10),
                   color: CupertinoTheme.of(context).primaryColor,
-                  onPressed: () {},
+                  // TODO: implement get songs on pressed
+                  onPressed: () async {
+                    getSongPressed = true;
+                    setState(() {});
+                  },
                   minSize: 0,
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -162,49 +165,74 @@ class _MapPageState extends State<MapPage> {
                   )),
             ),
           ),
-          if (!cameraTrack)
-            // Recenter
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: Container(
-                padding: const EdgeInsets.only(left: 20, bottom: 20),
-                width: 160,
-                child: CupertinoButton(
-                    padding: const EdgeInsets.only(
-                        left: 20, top: 10, right: 20, bottom: 10),
-                    color: CupertinoTheme.of(context).barBackgroundColor,
-                    onPressed: () {
-                      setState(() {
-                        cameraTrack = true;
-                        mapController.animateCamera(
-                            CameraUpdate.newCameraPosition(CameraPosition(
-                                bearing: 0.0,
-                                target: LatLng(locationData.latitude!,
-                                    locationData.longitude!),
-                                zoom: 16.16)));
-                      });
-                    },
-                    minSize: 0,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text('Recenter',
-                            style: TextStyle(
-                                color: CupertinoTheme.of(context)
-                                    .textTheme
-                                    .textStyle
-                                    .color)),
-                        Icon(
-                          CupertinoIcons.location_fill,
-                          color: CupertinoTheme.of(context)
-                              .textTheme
-                              .textStyle
-                              .color,
-                        )
-                      ],
-                    )),
-              ),
-            )
+          // Recenter
+          Builder(builder: (context) {
+            if (!cameraTrack) {
+              return Align(
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  padding: const EdgeInsets.only(left: 20, bottom: 20),
+                  width: 160,
+                  child: CupertinoButton(
+                      padding: const EdgeInsets.only(
+                          left: 20, top: 10, right: 20, bottom: 10),
+                      color: CupertinoTheme.of(context).barBackgroundColor,
+                      onPressed: () {
+                        setState(() {
+                          cameraTrack = true;
+                          mapController.animateCamera(
+                              CameraUpdate.newCameraPosition(CameraPosition(
+                                  bearing: 0.0,
+                                  target: LatLng(locationData.latitude!,
+                                      locationData.longitude!),
+                                  zoom: 16.16)));
+                        });
+                      },
+                      minSize: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text('Recenter',
+                              style: TextStyle(
+                                  color: CupertinoTheme.of(context)
+                                      .textTheme
+                                      .textStyle
+                                      .color)),
+                          Icon(
+                            CupertinoIcons.location_fill,
+                            color: CupertinoTheme.of(context)
+                                .textTheme
+                                .textStyle
+                                .color,
+                          )
+                        ],
+                      )),
+                ),
+              );
+            } else {
+              return const SizedBox.shrink();
+            }
+          }),
+          Builder(builder: (context) {
+            if (getSongPressed) {
+              return FutureBuilder(future: Future(() async {
+                Future<List> songs =
+                    getSongs(await getGenre(getDistrictName(geocodeResponse)));
+                return songs;
+              }), builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  return Center(
+                    heightFactor: 0.5,
+                    child: Container(),
+                  );
+                } else {
+                  return Container();
+                }
+              });
+            } else {
+              return const SizedBox.shrink();
+            }
+          })
         ],
       ),
     );

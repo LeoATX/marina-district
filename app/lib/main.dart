@@ -5,6 +5,12 @@ void main() {
   runApp(const App());
 }
 
+// Global Variables
+// location data
+late dynamic locationData;
+// Spotify Token
+late String spotifyToken;
+
 class App extends StatefulWidget {
   const App({super.key});
 
