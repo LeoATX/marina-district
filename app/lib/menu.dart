@@ -17,7 +17,6 @@ class _MenuPageState extends State<MenuPage> {
   @override
   void initState() {
     super.initState();
-    response = 'hello';
   }
 
   @override
@@ -25,10 +24,8 @@ class _MenuPageState extends State<MenuPage> {
     return CupertinoTabView(
       builder: (BuildContext context) {
         return Center(
-          child: Text(
-              """${locationData.altitude}, ${locationData.longitude.toString()}\n
-              $response
-              """),
+          child:
+              Text("""${locationData.altitude}, ${locationData.longitude}"""),
         );
       },
     );

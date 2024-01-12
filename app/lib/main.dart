@@ -1,5 +1,6 @@
 import 'package:app/home.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:location/location.dart';
 
 void main() {
   runApp(const App());
@@ -7,7 +8,7 @@ void main() {
 
 // Global Variables
 // location data
-late dynamic locationData;
+late LocationData locationData;
 // Spotify Token
 late String spotifyToken;
 

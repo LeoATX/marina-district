@@ -60,6 +60,7 @@ class _HomePageState extends State<HomePage> {
     // init distName & geocodeResponse
     geocodeResponse = await getGeocodeResponse(locationData);
     distName = getDistrictName(geocodeResponse);
+    print('location data complete');
   }
 
   // Future<String> initDistName() async {
@@ -79,7 +80,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<String> getSpotifyToken() async {
     const clientId = '783911c86b494ab282bd1623ca55998b';
-    const clientSecret = 'ec709b7a62a04f10aa873ce1d49a7a86';
+    const clientSecret = '21a9960a92b949f696d019697f8db578';
+    print('getting spotify token');
     final response = (await post(
         Uri.parse('https://accounts.spotify.com/api/token'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -95,6 +97,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     Timer.periodic(const Duration(seconds: 3000), (timer) async {
       spotifyToken = await getSpotifyToken();
+      print('getting spotify token in init state');
     });
   }
 
@@ -127,25 +130,25 @@ class _HomePageState extends State<HomePage> {
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.hasData) {
             spotifyToken = snapshot.data![2];
-            print(spotifyToken);
-            return CupertinoTabScaffold(
-              tabBar: CupertinoTabBar(
-                  items: const [
-                    BottomNavigationBarItem(
-                        icon: Icon(CupertinoIcons.map),
-                        activeIcon: Icon(CupertinoIcons.map_fill)),
-                    BottomNavigationBarItem(
-                        icon: Icon(CupertinoIcons.bookmark),
-                        activeIcon: Icon(CupertinoIcons.bookmark_fill)),
-                  ],
-                  activeColor: CupertinoTheme.of(context).primaryColor,
-                  border: const Border() // remove hairline border
-                  ),
-              tabBuilder: (BuildContext context, int index) {
-                // uses index from tabBuilder to navigate pages
-                return pages[index];
-              },
-            );
+            // return CupertinoTabScaffold(
+            //   tabBar: CupertinoTabBar(
+            //       items: const [
+            //         BottomNavigationBarItem(
+            //             icon: Icon(CupertinoIcons.map),
+            //             activeIcon: Icon(CupertinoIcons.map_fill)),
+            //         BottomNavigationBarItem(
+            //             icon: Icon(CupertinoIcons.bookmark),
+            //             activeIcon: Icon(CupertinoIcons.bookmark_fill)),
+            //       ],
+            //       activeColor: CupertinoTheme.of(context).primaryColor,
+            //       border: const Border() // remove hairline border
+            //       ),
+            //   tabBuilder: (BuildContext context, int index) {
+            //     // uses index from tabBuilder to navigate pages
+            //     return pages[index];
+            //   },
+            // );
+            return pages[0];
           } else {
             return const LoadPage();
           }

@@ -45,24 +45,33 @@ String getDistAddress(dynamic response) {
   response = jsonDecode(response);
   ReverseGeocoding reverseGeocoding = ReverseGeocoding.fromJson(response);
 
-  resultLoop:
   for (var result in reverseGeocoding.results) {
+    if (distAddress != "") {
+      return distAddress;
+    }
     for (var index = 0; index < result.addressComponent.length; index += 1) {
       // break here if possible
       if (result.addressComponent[index].types.contains('neighborhood')) {
         distAddress = "$distAddress${result.addressComponent[index].longName}";
       }
       if (result.addressComponent[index].types.contains('locality')) {
-        distAddress =
-            "$distAddress, ${result.addressComponent[index].longName}";
+        if (distAddress == "") {
+          distAddress =
+              "$distAddress${result.addressComponent[index].longName}";
+        } else {
+          distAddress =
+              "$distAddress, ${result.addressComponent[index].longName}";
+        }
       }
       if (result.addressComponent[index].types
           .contains('administrative_area_level_1')) {
-        distAddress =
-            "$distAddress, ${result.addressComponent[index].longName}";
-      }
-      if (distAddress != "") {
-        return distAddress;
+        if (distAddress == "") {
+          distAddress =
+              "$distAddress${result.addressComponent[index].longName}";
+        } else {
+          distAddress =
+              "$distAddress, ${result.addressComponent[index].longName}";
+        }
       }
     }
   }

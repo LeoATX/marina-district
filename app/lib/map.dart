@@ -1,11 +1,14 @@
 import 'dart:async';
+
+// import 'dart:convert';
+import 'fetch_song.dart';
 import 'main.dart';
 import 'package:app/reverse_geocoding.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:location/location.dart';
-import 'fetch_song.dart';
+import 'track.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage(
@@ -40,9 +43,37 @@ class _MapPageState extends State<MapPage> {
   Location location = Location();
 
   // district name
-  late String distName;
+  late ValueNotifier<String> distName;
 
   dynamic geocodeResponse;
+
+  late List tracks;
+
+  late List<dynamic> previewPlayers = [];
+
+  // recenter & getSong inset amount
+  static const double buttonInset = 20;
+
+  // fetch songs for SongPage
+  Future<bool> initSongs() async {
+    // Future to get songs
+    final String genre = await getGenre(getDistAddress(geocodeResponse));
+    final List tracks = await getTracks(genre);
+    // "return" tracks
+    this.tracks = tracks;
+
+    // create players
+    for (final track in tracks) {
+      if (track['preview_url'] != null) {
+        final player = AudioPlayer();
+        await player.setUrl(track['preview_url']);
+        previewPlayers.add(player);
+      } else {
+        previewPlayers.add(null);
+      }
+    }
+    return true;
+  }
 
   void _onMapCreated(GoogleMapController controller) {
     this.controller.complete(controller);
@@ -69,19 +100,16 @@ class _MapPageState extends State<MapPage> {
 
     // district name
     locationData = widget.initialLocationData;
-    distName = widget.initialDistName;
+    // distName = widget.initialDistName;
+    distName = ValueNotifier<String>(widget.initialDistName);
     geocodeResponse = widget.initialGeocodeResponse;
 
-    // TODO: change for prod
-    Timer.periodic(const Duration(seconds: 9999999), (timer) async {
+    Timer.periodic(const Duration(seconds: 5), (timer) async {
       // make geocoding api call
-      geocodeResponse = getGeocodeResponse(locationData);
-      print('making api calls');
-      distName = getDistrictName(geocodeResponse);
-
-      setState(() {
-        /* update response */
-      });
+      geocodeResponse = await getGeocodeResponse(locationData);
+      print('making geolocation api calls');
+      // distName = getDistrictName(geocodeResponse);
+      distName.value = getDistrictName(geocodeResponse);
     });
   }
 
@@ -91,12 +119,17 @@ class _MapPageState extends State<MapPage> {
       navigationBar: CupertinoNavigationBar(
         automaticallyImplyLeading: false,
         automaticallyImplyMiddle: false,
-        middle: Text(
-          distName,
-          style: TextStyle(
-              color: CupertinoTheme.of(context).primaryColor,
-              // fontSize: 24,
-              fontFamily: 'JetBrains Mono'),
+        middle: ValueListenableBuilder<String>(
+          builder: (BuildContext context, String distName, Widget? child) {
+            return Text(
+              distName,
+              style: TextStyle(
+                  color: CupertinoTheme.of(context).primaryColor,
+                  // fontSize: 24,
+                  fontFamily: 'JetBrains Mono'),
+            );
+          },
+          valueListenable: distName,
         ),
         border: null,
         // backgroundColor: const Color(0x00ffffff),
@@ -121,50 +154,47 @@ class _MapPageState extends State<MapPage> {
               compassEnabled: true,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
+              cloudMapId: '54bef6d26d4a77df',
             ),
           ),
-          // Add button
-          // SafeArea(
-          //   top: true,
-          //   child: Container(
-          //     alignment: Alignment.topRight,
-          //     child: Text(
-          //       distName,
-          //       style: TextStyle(
-          //           color: CupertinoTheme.of(context).primaryColor,
-          //           fontSize: 24,
-          //           fontFamily: 'JetBrains Mono'),
-          //     ),
-          //   ),
-          // ),
+
+          // get song button
           Align(
             alignment: Alignment.bottomRight,
-            child: Container(
-              padding: const EdgeInsets.only(right: 20, bottom: 20),
-              width: 160,
-              child: CupertinoButton(
+            child: Builder(builder: (context) {
+              if (!getSongPressed) {
+                return Container(
                   padding: const EdgeInsets.only(
-                      left: 20, top: 10, right: 20, bottom: 10),
-                  color: CupertinoTheme.of(context).primaryColor,
-                  // TODO: implement get songs on pressed
-                  onPressed: () async {
-                    getSongPressed = true;
-                    setState(() {});
-                  },
-                  minSize: 0,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text('Get Song',
-                          style: TextStyle(color: CupertinoColors.white)),
-                      Icon(
-                        CupertinoIcons.music_note_2,
-                        color: CupertinoColors.white,
-                      )
-                    ],
-                  )),
-            ),
+                      right: buttonInset, bottom: buttonInset),
+                  width: 160,
+                  child: CupertinoButton(
+                      padding: const EdgeInsets.only(
+                          left: 20, top: 10, right: 20, bottom: 10),
+                      color: CupertinoTheme.of(context).primaryColor,
+                      onPressed: () async {
+                        setState(() {
+                          getSongPressed = true;
+                        });
+                      },
+                      minSize: 0,
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text('Get Song',
+                              style: TextStyle(color: CupertinoColors.white)),
+                          Icon(
+                            CupertinoIcons.music_note_2,
+                            color: CupertinoColors.white,
+                          )
+                        ],
+                      )),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            }),
           ),
+
           // Recenter
           Builder(builder: (context) {
             if (!cameraTrack) {
@@ -213,22 +243,62 @@ class _MapPageState extends State<MapPage> {
               return const SizedBox.shrink();
             }
           }),
+
+          // song view container
+          GestureDetector(
+            // needed to prevent google maps from triggering setState
+            behavior: HitTestBehavior.opaque,
+            child: Builder(builder: (context) {
+              if (getSongPressed) {
+                return Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: CupertinoTheme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  margin: const EdgeInsets.all(20),
+                  child: FutureBuilder(
+                      future: initSongs(),
+                      builder:
+                          (BuildContext context, AsyncSnapshot<bool> snapshot) {
+                        // return song page within container
+                        if (snapshot.data != null) {
+                          return TrackPage(
+                              tracks: tracks, players: previewPlayers);
+                        } else {
+                          // loading screen
+                          return const CupertinoActivityIndicator(
+                            color: CupertinoColors.white,
+                            radius: 16,
+                          );
+                        }
+                      }),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            }),
+          ),
+
+          // closing button
           Builder(builder: (context) {
             if (getSongPressed) {
-              return FutureBuilder(future: Future(() async {
-                Future<List> songs =
-                    getSongs(await getGenre(getDistrictName(geocodeResponse)));
-                return songs;
-              }), builder: (BuildContext context, AsyncSnapshot snapshot) {
-                if (snapshot.hasData) {
-                  return Center(
-                    heightFactor: 0.5,
-                    child: Container(),
-                  );
-                } else {
-                  return Container();
-                }
-              });
+              return Container(
+                alignment: Alignment.topRight,
+                padding: const EdgeInsets.only(top: 10, right: 10),
+                child: CupertinoButton(
+                  onPressed: () {
+                    setState(() {
+                      getSongPressed = !getSongPressed;
+                    });
+                  },
+                  child: Icon(
+                    CupertinoIcons.xmark_circle_fill,
+                    size: 32,
+                    color: CupertinoTheme.of(context).barBackgroundColor,
+                  ),
+                ),
+              );
             } else {
               return const SizedBox.shrink();
             }
