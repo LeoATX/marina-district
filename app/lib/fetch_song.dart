@@ -25,7 +25,7 @@ Future<String> getGenre(String address) async {
   Map<String, String> headers = {
     'Content-Type': 'application/json',
     'Authorization':
-        'Bearer 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'
+        'Bearer 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'
   };
   List<String> genres = [
     'acoustic',
@@ -185,13 +185,14 @@ Future<List> getTracks(String genre) async {
   Map<String, String> params = {
     'market': 'US',
     'seed_genres': genre,
-    'target_popularity': '100'
+    'min_popularity': '75',
+    'max_popularity': '100'
   };
   print('getting spotify tracks');
-  // Response response = (await get(
-  //     Uri.https(uri, 'v1/recommendations', params), headers: headers));
+  Response response = (await get(Uri.https(uri, 'v1/recommendations', params),
+      headers: headers));
   // TODO: remove after rate limit
-  Response response = Response(recommendationBody, 200);
+  // Response response = Response(recommendationBody, 200);
   if (response.statusCode == 200) {
     return jsonDecode(response.body)['tracks'];
   } else {

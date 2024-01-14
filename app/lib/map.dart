@@ -1,6 +1,8 @@
 import 'dart:async';
 
 // import 'dart:convert';
+import 'package:flutter/services.dart';
+
 import 'fetch_song.dart';
 import 'main.dart';
 import 'package:app/reverse_geocoding.dart';
@@ -33,6 +35,8 @@ class _MapPageState extends State<MapPage> {
   // actual map controller after await
   late GoogleMapController mapController;
   bool cameraTrack = true; // settable with button
+
+  late String mapStyle;
 
   // song recommendation page pop up
   bool getSongPressed = false;
@@ -67,6 +71,7 @@ class _MapPageState extends State<MapPage> {
       if (track['preview_url'] != null) {
         final player = AudioPlayer();
         await player.setUrl(track['preview_url']);
+        await player.setLoopMode(LoopMode.one);
         previewPlayers.add(player);
       } else {
         previewPlayers.add(null);
@@ -75,8 +80,10 @@ class _MapPageState extends State<MapPage> {
     return true;
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(GoogleMapController controller) async {
     this.controller.complete(controller);
+    mapStyle = await rootBundle.loadString('assets/MapStyle.json');
+    await mapController.setMapStyle(mapStyle);
   }
 
   @override
@@ -92,11 +99,12 @@ class _MapPageState extends State<MapPage> {
       if (cameraTrack) {
         mapController.animateCamera(CameraUpdate.newCameraPosition(
             CameraPosition(
-                bearing: 0.0,
                 target: LatLng(locationData.latitude!, locationData.longitude!),
                 zoom: 16.16)));
       }
     });
+
+    // get string from MapStyle.json
 
     // district name
     locationData = widget.initialLocationData;
@@ -104,7 +112,8 @@ class _MapPageState extends State<MapPage> {
     distName = ValueNotifier<String>(widget.initialDistName);
     geocodeResponse = widget.initialGeocodeResponse;
 
-    Timer.periodic(const Duration(seconds: 5), (timer) async {
+    // TODO: change for prod
+    Timer.periodic(const Duration(seconds: 5555), (timer) async {
       // make geocoding api call
       geocodeResponse = await getGeocodeResponse(locationData);
       print('making geolocation api calls');
@@ -132,7 +141,6 @@ class _MapPageState extends State<MapPage> {
           valueListenable: distName,
         ),
         border: null,
-        // backgroundColor: const Color(0x00ffffff),
       ),
       backgroundColor: const Color(0x00ffffff),
       child: Stack(
@@ -154,7 +162,7 @@ class _MapPageState extends State<MapPage> {
               compassEnabled: true,
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
-              cloudMapId: '54bef6d26d4a77df',
+              // cloudMapId: '54bef6d26d4a77df',
             ),
           ),
 
@@ -206,7 +214,7 @@ class _MapPageState extends State<MapPage> {
                   child: CupertinoButton(
                       padding: const EdgeInsets.only(
                           left: 20, top: 10, right: 20, bottom: 10),
-                      color: CupertinoTheme.of(context).barBackgroundColor,
+                      color: CupertinoTheme.of(context).scaffoldBackgroundColor,
                       onPressed: () {
                         setState(() {
                           cameraTrack = true;
@@ -253,7 +261,7 @@ class _MapPageState extends State<MapPage> {
                 return Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: CupertinoTheme.of(context).primaryColor,
+                    color: CupertinoTheme.of(context).barBackgroundColor,
                     borderRadius: BorderRadius.circular(16.0),
                   ),
                   margin: const EdgeInsets.all(20),
@@ -267,8 +275,11 @@ class _MapPageState extends State<MapPage> {
                               tracks: tracks, players: previewPlayers);
                         } else {
                           // loading screen
-                          return const CupertinoActivityIndicator(
-                            color: CupertinoColors.white,
+                          return CupertinoActivityIndicator(
+                            color: CupertinoTheme.of(context)
+                                .textTheme
+                                .textStyle
+                                .color,
                             radius: 16,
                           );
                         }
@@ -295,7 +306,7 @@ class _MapPageState extends State<MapPage> {
                   child: Icon(
                     CupertinoIcons.xmark_circle_fill,
                     size: 32,
-                    color: CupertinoTheme.of(context).barBackgroundColor,
+                    color: CupertinoTheme.of(context).primaryColor,
                   ),
                 ),
               );

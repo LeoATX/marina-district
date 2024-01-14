@@ -16,12 +16,21 @@ class TrackPage extends StatefulWidget {
 }
 
 class _TrackPageState extends State<TrackPage> {
-  ValueNotifier<int> songViewIndex = ValueNotifier(0);
+  int songViewIndex = 0;
   List trackAlbums = [];
   List trackImages = [];
   List trackArtists = [];
   List trackNames = [];
   List trackURLs = [];
+
+  // audio player used to play 30 sec previews
+  late AudioPlayer player;
+
+  // track if player is already playing
+  bool isPlaying = false;
+
+  // control the size of the chevron
+  final double chevronRatio = 0.05;
 
   @override
   void initState() {
@@ -52,7 +61,20 @@ class _TrackPageState extends State<TrackPage> {
 
   @override
   Widget build(BuildContext context) {
-    const double chevronRatio = 0.05;
+    // handle repeated plays
+    // if (isPlaying) {
+    //   print('listening');
+    //   player.playerStateStream.listen((playerState) {
+    //     if (playerState.processingState == ProcessingState.completed) {
+    //       print('end of song');
+    //       setState(() {
+    //         isPlaying = false;
+    //         player.pause();
+    //       });
+    //     }
+    //   });
+    // }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
@@ -64,16 +86,20 @@ class _TrackPageState extends State<TrackPage> {
               borderRadius: BorderRadius.zero,
               onPressed: () {
                 setState(() {
+                  if (isPlaying) {
+                    player.pause();
+                  }
+                  isPlaying = false;
                   if (songViewIndex == 0) {
-                    songViewIndex.value = widget.tracks.length - 1;
+                    songViewIndex = widget.tracks.length - 1;
                   } else {
-                    songViewIndex.value -= 1;
+                    songViewIndex -= 1;
                   }
                 });
               },
               child: Icon(
                 CupertinoIcons.left_chevron,
-                color: CupertinoTheme.of(context).barBackgroundColor,
+                color: CupertinoTheme.of(context).textTheme.textStyle.color,
               )),
         ),
 
@@ -81,7 +107,7 @@ class _TrackPageState extends State<TrackPage> {
         Center(
           child: IndexedStack(
             alignment: Alignment.center,
-            index: songViewIndex.value,
+            index: songViewIndex,
             children: <Widget>[
               for (var index = 0; index < widget.tracks.length; index++)
                 Column(
@@ -93,7 +119,9 @@ class _TrackPageState extends State<TrackPage> {
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     Text(trackArtists[index]),
+
                     const SizedBox(height: 20),
+
                     // Album Image
                     SizedBox(
                         width: MediaQuery.of(context).size.width * 0.64,
@@ -106,26 +134,70 @@ class _TrackPageState extends State<TrackPage> {
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
+
                     const SizedBox(height: 20),
-                    // TODO: implement play/pause
-                    StatefulBuilder(builder:
-                        (BuildContext context, StateSetter setPlayPause) {
-                      if (widget.players[index] != null) {
-                        return CupertinoButton(
-                            color: CupertinoColors.white,
-                            onPressed: () {
-                              AudioPlayer player = widget.players[index];
-                              player.play();
-                            },
-                            child: const Icon(CupertinoIcons.play_circle_fill,
-                                color: CupertinoColors.white));
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    }),
+
+                    // play pause controls
+                    SizedBox(
+                      height: 44,
+                      child: StatefulBuilder(builder:
+                          (BuildContext context, StateSetter setPlayPause) {
+                        if (widget.players[index] != null) {
+                          // if the player is not playing
+                          if (!isPlaying) {
+                            return CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  player = widget.players[index];
+                                  player.play();
+                                  setState(() {
+                                    isPlaying = !isPlaying;
+                                  });
+                                },
+                                child: Icon(CupertinoIcons.play_circle_fill,
+                                    color: CupertinoTheme.of(context)
+                                        .textTheme
+                                        .textStyle
+                                        .color));
+                          }
+                          // display pause button
+                          else {
+                            return CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  player = widget.players[index];
+                                  player.pause();
+                                  setState(() {
+                                    isPlaying = !isPlaying;
+                                  });
+                                },
+                                child: Icon(CupertinoIcons.pause_circle_fill,
+                                    color: CupertinoTheme.of(context)
+                                        .textTheme
+                                        .textStyle
+                                        .color));
+                          }
+                        } else {
+                          // player unavailable
+                          return const Opacity(
+                              opacity: 0.8,
+                              child: Center(
+                                  child: Text(
+                                'preview unavailable 🥺',
+                                style: TextStyle(fontSize: 12),
+                              )));
+                        }
+                      }),
+                    ),
+
+                    const SizedBox(height: 20),
+
                     CupertinoButton(
-                      color: CupertinoTheme.of(context).barBackgroundColor,
+                      color:
+                          CupertinoTheme.of(context).textTheme.textStyle.color,
                       onPressed: () async {
+                        player.pause();
+                        isPlaying = false;
                         await launchUrl(Uri.parse(trackURLs[index]));
                       },
                       child: SizedBox(
@@ -148,16 +220,20 @@ class _TrackPageState extends State<TrackPage> {
               borderRadius: BorderRadius.zero,
               onPressed: () {
                 setState(() {
+                  if (isPlaying) {
+                    player.pause();
+                  }
+                  isPlaying = false;
                   if (songViewIndex == widget.tracks.length - 1) {
-                    songViewIndex.value = 0;
+                    songViewIndex = 0;
                   } else {
-                    songViewIndex.value += 1;
+                    songViewIndex += 1;
                   }
                 });
               },
               child: Icon(
                 CupertinoIcons.right_chevron,
-                color: CupertinoTheme.of(context).barBackgroundColor,
+                color: CupertinoTheme.of(context).textTheme.textStyle.color,
               )),
         ),
       ],

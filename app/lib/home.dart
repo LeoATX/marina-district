@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'main.dart';
-import 'package:app/load.dart';
 import 'package:app/map.dart';
 import 'package:app/menu.dart';
 import 'package:app/reverse_geocoding.dart';
@@ -150,7 +149,14 @@ class _HomePageState extends State<HomePage> {
             // );
             return pages[0];
           } else {
-            return const LoadPage();
+            return CupertinoPageScaffold(
+                child: Center(
+                    child: Text('Marina',
+                        style: TextStyle(
+                            // fontFamily: 'JetBrains Mono',
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: CupertinoTheme.of(context).primaryColor))));
           }
         });
   }
