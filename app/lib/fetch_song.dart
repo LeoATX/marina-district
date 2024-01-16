@@ -2,24 +2,6 @@ import 'package:http/http.dart';
 import 'dart:convert';
 import 'main.dart';
 
-void main() async {
-  // String genre = await getGenre('Marina District, San Francisco, CA');
-
-  // TODO: delete for prod, only for testing purposes
-  // const clientId = '783911c86b494ab282bd1623ca55998b';
-  // const clientSecret = '344985f8c7df4606ac4d9283c14901da';
-  // dynamic response = (await post(
-  //     Uri.parse('https://accounts.spotify.com/api/token'),
-  //     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-  //     body:
-  //         'grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret'));
-  // spotifyToken = jsonDecode(response.body)['access_token'];
-  // TODO: END TODO.
-
-  final String genre = await getGenre('Santa Clara, California');
-  print(genre);
-}
-
 Future<String> getGenre(String address) async {
   const uri = 'api.openai.com';
   Map<String, String> headers = {
