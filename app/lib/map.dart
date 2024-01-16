@@ -66,6 +66,7 @@ class _MapPageState extends State<MapPage> {
     // "return" tracks
     this.tracks = tracks;
 
+    previewPlayers = [];
     // create players
     for (final track in tracks) {
       if (track['preview_url'] != null) {
@@ -82,29 +83,32 @@ class _MapPageState extends State<MapPage> {
 
   void _onMapCreated(GoogleMapController controller) async {
     this.controller.complete(controller);
+
+    // run once map is created
+    mapController = await this.controller.future;
+
+    // get string from MapStyle.json
+    // set the map style
     mapStyle = await rootBundle.loadString('assets/MapStyle.json');
     await mapController.setMapStyle(mapStyle);
-  }
 
-  @override
-  void initState() {
-    super.initState();
     // live location monitoring
     location.onLocationChanged.listen((LocationData currentLocation) async {
       // Use current location
       locationData = currentLocation;
-      // run once on map created
-      mapController = await controller.future;
 
       if (cameraTrack) {
         mapController.animateCamera(CameraUpdate.newCameraPosition(
             CameraPosition(
                 target: LatLng(locationData.latitude!, locationData.longitude!),
-                zoom: 16.16)));
+                zoom: 18)));
       }
     });
+  }
 
-    // get string from MapStyle.json
+  @override
+  void initState() {
+    super.initState();
 
     // district name
     locationData = widget.initialLocationData;
@@ -112,8 +116,7 @@ class _MapPageState extends State<MapPage> {
     distName = ValueNotifier<String>(widget.initialDistName);
     geocodeResponse = widget.initialGeocodeResponse;
 
-    // TODO: change for prod
-    Timer.periodic(const Duration(seconds: 5555), (timer) async {
+    Timer.periodic(const Duration(seconds: 15), (timer) async {
       // make geocoding api call
       geocodeResponse = await getGeocodeResponse(locationData);
       print('making geolocation api calls');
@@ -156,7 +159,7 @@ class _MapPageState extends State<MapPage> {
               initialCameraPosition: CameraPosition(
                 target: LatLng(widget.initialLocationData.latitude!,
                     widget.initialLocationData.longitude!),
-                zoom: 16.16,
+                zoom: 18,
               ),
               onMapCreated: _onMapCreated,
               compassEnabled: true,
@@ -215,15 +218,15 @@ class _MapPageState extends State<MapPage> {
                       padding: const EdgeInsets.only(
                           left: 20, top: 10, right: 20, bottom: 10),
                       color: CupertinoTheme.of(context).scaffoldBackgroundColor,
-                      onPressed: () {
+                      onPressed: () async {
+                        mapController.animateCamera(
+                            CameraUpdate.newCameraPosition(CameraPosition(
+                                bearing: 0.0,
+                                target: LatLng(locationData.latitude!,
+                                    locationData.longitude!),
+                                zoom: 18)));
                         setState(() {
                           cameraTrack = true;
-                          mapController.animateCamera(
-                              CameraUpdate.newCameraPosition(CameraPosition(
-                                  bearing: 0.0,
-                                  target: LatLng(locationData.latitude!,
-                                      locationData.longitude!),
-                                  zoom: 16.16)));
                         });
                       },
                       minSize: 0,

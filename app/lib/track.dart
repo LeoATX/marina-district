@@ -51,11 +51,11 @@ class _TrackPageState extends State<TrackPage> {
       trackArtists.add(artistName);
       trackNames.add(track['name']);
       trackURLs.add(track['external_urls']['spotify']);
-      if (track['preview_url'] != null) {
-        trackURLs.add(track['preview_url']);
-      } else {
-        trackURLs.add(null);
-      }
+      // if (track['preview_url'] != null) {
+      //   trackURLs.add(track['preview_url']);
+      // } else {
+      //   trackURLs.add(null);
+      // }
     }
   }
 
@@ -105,111 +105,113 @@ class _TrackPageState extends State<TrackPage> {
 
         // center song view stack & play controls
         Center(
-          child: IndexedStack(
-            alignment: Alignment.center,
-            index: songViewIndex,
-            children: <Widget>[
-              for (var index = 0; index < widget.tracks.length; index++)
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      trackNames[index],
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(trackArtists[index]),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.64,
+            child: IndexedStack(
+              alignment: Alignment.center,
+              index: songViewIndex,
+              children: <Widget>[
+                for (var index = 0; index < widget.tracks.length; index++)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(trackNames[index],
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(trackArtists[index]),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // Album Image
-                    SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.64,
-                        height: MediaQuery.of(context).size.width * 0.64,
-                        child: Image.network(trackImages[index].toString())),
-                    Opacity(
-                      opacity: 0.4,
-                      child: Text(
-                        trackAlbums[index],
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // play pause controls
-                    SizedBox(
-                      height: 44,
-                      child: StatefulBuilder(builder:
-                          (BuildContext context, StateSetter setPlayPause) {
-                        if (widget.players[index] != null) {
-                          // if the player is not playing
-                          if (!isPlaying) {
-                            return CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  player = widget.players[index];
-                                  player.play();
-                                  setState(() {
-                                    isPlaying = !isPlaying;
-                                  });
-                                },
-                                child: Icon(CupertinoIcons.play_circle_fill,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color));
-                          }
-                          // display pause button
-                          else {
-                            return CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () {
-                                  player = widget.players[index];
-                                  player.pause();
-                                  setState(() {
-                                    isPlaying = !isPlaying;
-                                  });
-                                },
-                                child: Icon(CupertinoIcons.pause_circle_fill,
-                                    color: CupertinoTheme.of(context)
-                                        .textTheme
-                                        .textStyle
-                                        .color));
-                          }
-                        } else {
-                          // player unavailable
-                          return const Opacity(
-                              opacity: 0.8,
-                              child: Center(
-                                  child: Text(
-                                'preview unavailable 🥺',
-                                style: TextStyle(fontSize: 12),
-                              )));
-                        }
-                      }),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    CupertinoButton(
-                      color:
-                          CupertinoTheme.of(context).textTheme.textStyle.color,
-                      onPressed: () async {
-                        player.pause();
-                        isPlaying = false;
-                        await launchUrl(Uri.parse(trackURLs[index]));
-                      },
-                      child: SizedBox(
-                        height: 16,
-                        child: Image.asset(
-                          'assets/Spotify_Logo_CMYK_Green.png',
+                      // Album Image
+                      SizedBox(
+                          height: MediaQuery.of(context).size.width * 0.64,
+                          child: Image.network(trackImages[index].toString())),
+                      Opacity(
+                        opacity: 0.4,
+                        child: Text(
+                          trackAlbums[index],
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
-                    )
-                  ],
-                )
-            ],
+
+                      const SizedBox(height: 20),
+
+                      // play pause controls
+                      SizedBox(
+                        height: 44,
+                        child: StatefulBuilder(builder:
+                            (BuildContext context, StateSetter setPlayPause) {
+                          if (widget.players[index] != null) {
+                            // if the player is not playing
+                            if (!isPlaying) {
+                              return CupertinoButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    player = widget.players[index];
+                                    player.play();
+                                    setState(() {
+                                      isPlaying = !isPlaying;
+                                    });
+                                  },
+                                  child: Icon(CupertinoIcons.play_circle_fill,
+                                      color: CupertinoTheme.of(context)
+                                          .textTheme
+                                          .textStyle
+                                          .color));
+                            }
+                            // display pause button
+                            else {
+                              return CupertinoButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    player = widget.players[index];
+                                    player.pause();
+                                    setState(() {
+                                      isPlaying = !isPlaying;
+                                    });
+                                  },
+                                  child: Icon(CupertinoIcons.pause_circle_fill,
+                                      color: CupertinoTheme.of(context)
+                                          .textTheme
+                                          .textStyle
+                                          .color));
+                            }
+                          } else {
+                            // player unavailable
+                            return const Opacity(
+                                opacity: 0.8,
+                                child: Center(
+                                    child: Text(
+                                  'preview unavailable 🥺',
+                                  style: TextStyle(fontSize: 12),
+                                )));
+                          }
+                        }),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      CupertinoButton(
+                        color: CupertinoTheme.of(context)
+                            .textTheme
+                            .textStyle
+                            .color,
+                        onPressed: () async {
+                          player.pause();
+                          isPlaying = false;
+                          await launchUrl(Uri.parse(trackURLs[index]));
+                        },
+                        child: SizedBox(
+                          height: 16,
+                          child: Image.asset(
+                            'assets/Spotify_Logo_CMYK_Green.png',
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+              ],
+            ),
           ),
         ),
         SizedBox(
@@ -238,5 +240,13 @@ class _TrackPageState extends State<TrackPage> {
         ),
       ],
     );
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    if (isPlaying) {
+      player.pause();
+    }
   }
 }

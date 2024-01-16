@@ -7,7 +7,7 @@ void main() async {
 
   // TODO: delete for prod, only for testing purposes
   // const clientId = '783911c86b494ab282bd1623ca55998b';
-  // const clientSecret = '21a9960a92b949f696d019697f8db578';
+  // const clientSecret = '344985f8c7df4606ac4d9283c14901da';
   // dynamic response = (await post(
   //     Uri.parse('https://accounts.spotify.com/api/token'),
   //     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -24,8 +24,7 @@ Future<String> getGenre(String address) async {
   const uri = 'api.openai.com';
   Map<String, String> headers = {
     'Content-Type': 'application/json',
-    'Authorization':
-        'Bearer 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'
+    'Authorization': 'Bearer ${const String.fromEnvironment('openAPIKey')}'
   };
   List<String> genres = [
     'acoustic',
@@ -172,7 +171,6 @@ Future<String> getGenre(String address) async {
   String response = (await post(Uri.https(uri, 'v1/chat/completions'),
           headers: headers, body: body))
       .body;
-  // print(response);
   String genre = jsonDecode(
       jsonDecode(response)['choices'][0]['message']['content'])['genre'];
 
@@ -185,13 +183,12 @@ Future<List> getTracks(String genre) async {
   Map<String, String> params = {
     'market': 'US',
     'seed_genres': genre,
-    'min_popularity': '75',
+    'min_popularity': '60',
     'max_popularity': '100'
   };
   print('getting spotify tracks');
   Response response = (await get(Uri.https(uri, 'v1/recommendations', params),
       headers: headers));
-  // TODO: remove after rate limit
   // Response response = Response(recommendationBody, 200);
   if (response.statusCode == 200) {
     return jsonDecode(response.body)['tracks'];

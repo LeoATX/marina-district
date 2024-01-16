@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage> {
   //   const uri = 'maps.googleapis.com';
   //   final Map<String, String> params = {
   //     'latlng': '${locationData.latitude}, ${locationData.longitude}',
-  //     'key': 'AIzaSyCg9uv44YTyBI2U5vKNV2y8sjaRV9QbAq4'
+  //     'key': 'AIzaSyCLSLujA8LsgKYlwKZbCe0ixQJ1R4_eHss'
   //   };
   //
   //   // make geocoding api call
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<String> getSpotifyToken() async {
     const clientId = '783911c86b494ab282bd1623ca55998b';
-    const clientSecret = '21a9960a92b949f696d019697f8db578';
+    const clientSecret = String.fromEnvironment('spotifyClientSecret');
     print('getting spotify token');
     final response = (await post(
         Uri.parse('https://accounts.spotify.com/api/token'),
